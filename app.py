@@ -7,8 +7,6 @@ from cert_teacher_claude3.cert_teacher_claude3_stack import CertTeacherClaude3St
 
 
 app = cdk.App()
-CertTeacherClaude3Stack(app, "CertTeacherClaude3Stack",
-    # For more information, see https://docs.aws.amazon.com/cdk/latest/guide/environments.html
-    )
+CertTeacherClaude3Stack(app, "CertTeacherClaude3Stack")
 
 app.synth()
