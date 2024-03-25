@@ -1,5 +1,5 @@
 from aws_cdk import (
-    # Duration,
+    Duration,
     Stack,
     aws_s3 as s3,
     aws_lambda as lambda_,
@@ -38,11 +38,13 @@ class CertTeacherClaude3Stack(Stack):
         lambda_role.add_to_policy(bedrock_policy_statement)
 
         # Lambda関数の作成
+        duration_15_min = Duration.seconds(900)
         lambda_function = lambda_python.PythonFunction(
             self, f"{base_name}-function",
             entry="lambda",
             runtime=lambda_.Runtime.PYTHON_3_12,
             role=lambda_role,
+            timeout=duration_15_min,
         )
 
         # S3バケットへのPUT操作をLambda関数のトリガーとして設定

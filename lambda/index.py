@@ -42,6 +42,8 @@ def handler(event, context):
     contentType = 'application/json'
     response = bedrock.invoke_model(body=body, modelId=modelId, accept=accept, contentType=contentType)
     response_body = json.loads(response.get('body').read())
+    pprint.pprint("response_body")
+    pprint.pprint(response_body)
     answer = response_body["content"][0]["text"]
     pprint.pprint("answer")
     pprint.pprint(answer)
