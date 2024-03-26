@@ -7,6 +7,10 @@ import base64
 # Initialize the S3 client
 s3_client = boto3.client('s3')
 
+dynamodb = boto3.resource('dynamodb')
+table_name = os.environ['DYNAMODB_TABLE_NAME']
+table = dynamodb.Table(table_name)
+
 def handler(event, context):
     pprint.pprint("event")
     pprint.pprint(event)
@@ -26,7 +30,6 @@ def handler(event, context):
     image_content = base64.b64encode(response['Body'].read()).decode('utf8')
 
     bedrock = boto3.client('bedrock-runtime')
-    system_prompt = "必ず日本語で答えてください"
     user_message = {
         "role": "user",
         "content": [
@@ -40,7 +43,7 @@ def handler(event, context):
         {
             "anthropic_version": "bedrock-2023-05-31",
             "max_tokens": 1000,
-            "system": system_prompt,
+            # "system": system_prompt,
             "messages": messages
         }
     )
@@ -50,13 +53,19 @@ def handler(event, context):
     contentType = 'application/json'
     response = bedrock.invoke_model(body=body, modelId=modelId, accept=accept, contentType=contentType)
     response_body = json.loads(response.get('body').read())
-    pprint.pprint("response_body")
-    pprint.pprint(response_body)
-    answer = response_body["content"][0]["text"]
-    pprint.pprint("answer")
-    pprint.pprint(answer)
+    english_question = response_body["content"][0]["text"]
+    pprint.pprint("english_question")
+    pprint.pprint(english_question)
 
+    # DynamoDBにデータを書き込む
+    response = table.put_item(
+        Item={
+            'id': object_key,
+            'english_question': english_question,
+        }
+    )
+    
     return {
         'statusCode': 200,
-        'body': response_body
+        'body': response
     }

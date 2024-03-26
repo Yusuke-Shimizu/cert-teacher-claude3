@@ -49,3 +49,9 @@ def deploy(c):
     logging.info("deploy")
     invoke.run("cdk deploy --require-approval never", pty=True,)
     logging.info("finish")
+
+@invoke.task
+def hotswap(c):
+    logging.info("hotswap deploy")
+    invoke.run("cdk deploy --require-approval never --hotswap", pty=True,)
+    logging.info("finish")
