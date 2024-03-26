@@ -45,7 +45,7 @@ class CertTeacherClaude3Stack(Stack):
 
         # Define the policy for accessing the DynamoDB table
         dynamodb_policy_statement = iam.PolicyStatement(
-            actions=["dynamodb:PutItem", "dynamodb:GetItem"],
+            actions=["dynamodb:*Item"],
             resources=[table.table_arn],
             effect=iam.Effect.ALLOW
         )

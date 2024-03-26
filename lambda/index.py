@@ -3,6 +3,7 @@ import boto3
 import os
 import pprint
 import base64
+from boto3.dynamodb.conditions import Attr
 
 # Initialize the S3 client
 s3_client = boto3.client('s3')
@@ -57,11 +58,61 @@ def handler(event, context):
     pprint.pprint("english_question")
     pprint.pprint(english_question)
 
-    # DynamoDBにデータを書き込む
+    
+    # 和訳
+    system_prompt = "必ず日本語で答えてください"
+    user_message = {
+        "role": "user",
+        "content": [
+            {"type": "text", "text": f"次の問題文と選択肢をそれぞれ和訳して\n\n-----\n{english_question}"}
+        ]
+    }
+    messages = [user_message]
+    body = json.dumps(
+        {
+            "anthropic_version": "bedrock-2023-05-31",
+            "max_tokens": 1000,
+            "system": system_prompt,
+            "messages": messages
+        }
+    )
+    response = bedrock.invoke_model(body=body, modelId=modelId, accept=accept, contentType=contentType)
+    response_body = json.loads(response.get('body').read())
+    japanese_question = response_body["content"][0]["text"]
+    pprint.pprint("japanese_question")
+    pprint.pprint(japanese_question)
+
+    
+    # 解説
+    system_prompt = "必ず日本語で答えてください"
+    user_message = {
+        "role": "user",
+        "content": [
+            {"type": "text", "text": f"次の問題文と選択肢の解説をしてください\n\n-----\n{japanese_question}"}
+        ]
+    }
+    messages = [user_message]
+    body = json.dumps(
+        {
+            "anthropic_version": "bedrock-2023-05-31",
+            "max_tokens": 1000,
+            "system": system_prompt,
+            "messages": messages
+        }
+    )
+    response = bedrock.invoke_model(body=body, modelId=modelId, accept=accept, contentType=contentType)
+    response_body = json.loads(response.get('body').read())
+    answer = response_body["content"][0]["text"]
+    pprint.pprint("answer")
+    pprint.pprint(answer)
+
+    # DynamoDBにデータを書き込
     response = table.put_item(
         Item={
             'id': object_key,
+            'japanese_question': japanese_question,
             'english_question': english_question,
+            'answer': answer,
         }
     )
     
