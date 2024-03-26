@@ -12,6 +12,31 @@ dynamodb = boto3.resource('dynamodb')
 table_name = os.environ['DYNAMODB_TABLE_NAME']
 table = dynamodb.Table(table_name)
 
+bedrock = boto3.client('bedrock-runtime')
+
+def invoke_model(user_message, system_prompt=None):
+    model_id = 'anthropic.claude-3-sonnet-20240229-v1:0'
+    messages = [user_message]
+    body = {
+        "anthropic_version": "bedrock-2023-05-31",
+        "max_tokens": 1000,
+        "messages": messages
+    }
+    if system_prompt:
+        body["system"] = system_prompt
+    body = json.dumps(body)
+    accept = 'application/json'
+    content_type = 'application/json'
+    
+    # invoke claude3
+    response = bedrock.invoke_model(body=body, modelId=model_id, accept=accept, contentType=content_type)
+    response_body = json.loads(response.get('body').read())
+    response_contents = response_body["content"][0]["text"]
+    pprint.pprint("response_contents")
+    pprint.pprint(response_contents)
+    return response_contents
+
+
 def handler(event, context):
     pprint.pprint("event")
     pprint.pprint(event)
@@ -30,7 +55,6 @@ def handler(event, context):
     # image_content = response['Body'].read()
     image_content = base64.b64encode(response['Body'].read()).decode('utf8')
 
-    bedrock = boto3.client('bedrock-runtime')
     user_message = {
         "role": "user",
         "content": [
@@ -38,26 +62,7 @@ def handler(event, context):
             {"type": "text", "text": "画像に書いてある問題文と選択肢を抜き出して"}
         ]
     }
-
-    messages = [user_message]
-    body = json.dumps(
-        {
-            "anthropic_version": "bedrock-2023-05-31",
-            "max_tokens": 1000,
-            # "system": system_prompt,
-            "messages": messages
-        }
-    )
-    modelId = 'anthropic.claude-3-sonnet-20240229-v1:0'
-    # modelId = 'anthropic.claude-3-haiku-20240307-v1:0'
-    accept = 'application/json'
-    contentType = 'application/json'
-    response = bedrock.invoke_model(body=body, modelId=modelId, accept=accept, contentType=contentType)
-    response_body = json.loads(response.get('body').read())
-    english_question = response_body["content"][0]["text"]
-    pprint.pprint("english_question")
-    pprint.pprint(english_question)
-
+    english_question = invoke_model(user_message)
     
     # 和訳
     system_prompt = "必ず日本語で答えてください"
@@ -67,44 +72,16 @@ def handler(event, context):
             {"type": "text", "text": f"次の問題文と選択肢をそれぞれ和訳して\n\n-----\n{english_question}"}
         ]
     }
-    messages = [user_message]
-    body = json.dumps(
-        {
-            "anthropic_version": "bedrock-2023-05-31",
-            "max_tokens": 1000,
-            "system": system_prompt,
-            "messages": messages
-        }
-    )
-    response = bedrock.invoke_model(body=body, modelId=modelId, accept=accept, contentType=contentType)
-    response_body = json.loads(response.get('body').read())
-    japanese_question = response_body["content"][0]["text"]
-    pprint.pprint("japanese_question")
-    pprint.pprint(japanese_question)
-
+    japanese_question = invoke_model(user_message, system_prompt)
     
     # 解説
-    system_prompt = "必ず日本語で答えてください"
     user_message = {
         "role": "user",
         "content": [
             {"type": "text", "text": f"次の問題文と選択肢の解説をしてください\n\n-----\n{japanese_question}"}
         ]
     }
-    messages = [user_message]
-    body = json.dumps(
-        {
-            "anthropic_version": "bedrock-2023-05-31",
-            "max_tokens": 1000,
-            "system": system_prompt,
-            "messages": messages
-        }
-    )
-    response = bedrock.invoke_model(body=body, modelId=modelId, accept=accept, contentType=contentType)
-    response_body = json.loads(response.get('body').read())
-    answer = response_body["content"][0]["text"]
-    pprint.pprint("answer")
-    pprint.pprint(answer)
+    answer = invoke_model(user_message, system_prompt)
 
     # DynamoDBにデータを書き込
     response = table.put_item(
