@@ -55,3 +55,9 @@ def hotswap(c):
     logging.info("hotswap deploy")
     invoke.run("cdk deploy --require-approval never --hotswap", pty=True,)
     logging.info("finish")
+
+@invoke.task
+def front(c):
+    logging.info("start frontend")
+    invoke.run("streamlit run frontend/app.py --server.port 8080", pty=True,)
+    logging.info("finish")
