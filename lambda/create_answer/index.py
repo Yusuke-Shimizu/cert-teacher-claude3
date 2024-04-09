@@ -83,10 +83,11 @@ def handler(event, context):
     }
     answer = invoke_model(user_message, system_prompt)
 
-    # DynamoDBにデータを書き込
+    # DynamoDBにデータを書き込み
+    key_id, _ = os.path.splitext(object_key)
     response = table.put_item(
         Item={
-            'id': object_key,
+            'id': key_id,
             'japanese_question': japanese_question,
             'english_question': english_question,
             'answer': answer,

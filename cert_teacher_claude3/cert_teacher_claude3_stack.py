@@ -58,7 +58,7 @@ class CertTeacherClaude3Stack(Stack):
         duration_15_min = Duration.seconds(900)
         lambda_function = lambda_python.PythonFunction(
             self, f"{base_name}-function",
-            entry="lambda",
+            entry="lambda/create_answer",
             runtime=lambda_.Runtime.PYTHON_3_12,
             role=lambda_role,
             timeout=duration_15_min,
@@ -73,3 +73,6 @@ class CertTeacherClaude3Stack(Stack):
 
         # Lambda関数にDynamoDBテーブル名を環境変数として設定
         lambda_function.add_environment(key="DYNAMODB_TABLE_NAME", value=table.table_name)
+
+        ### api ###
+        
