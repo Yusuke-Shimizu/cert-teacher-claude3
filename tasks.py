@@ -59,5 +59,5 @@ def hotswap(c):
 @invoke.task
 def front(c):
     logging.info("start frontend")
-    invoke.run("streamlit run frontend/app.py --server.port 8080", pty=True,)
+    invoke.run("streamlit run frontend/app.py --logger.level=debug", pty=True,)
     logging.info("finish")
