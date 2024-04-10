@@ -2,6 +2,7 @@ from aws_cdk import (
     Duration,
     Stack,
     RemovalPolicy,
+    CfnOutput,
     aws_s3 as s3,
     aws_lambda as lambda_,
     aws_s3_notifications as s3n,
@@ -76,3 +77,10 @@ class CertTeacherClaude3Stack(Stack):
 
         ### api ###
         
+        # アウトプットの追加
+        CfnOutput(self, "BucketNameOutput",
+                  value=bucket.bucket_name,
+                  description="The name of the S3 bucket")
+        CfnOutput(self, "DynamoDBTableNameOutput",
+                  value=table.table_name,
+                  description="The name of the DynamoDB table")
