@@ -18,7 +18,7 @@ def create_venv(c):
 
 @invoke.task
 def install(c):
-    invoke.run("pip install -r requirements.txt -r requirements-dev.txt")
+    c.run("pip install -r requirements.txt -r requirements-dev.txt")
 
 @invoke.task
 def install_direnv(c):
@@ -34,13 +34,13 @@ def install_direnv(c):
 
         # Install
         logging.info("Install direnv")
-        invoke.run(f"wget -O direnv https://github.com/direnv/direnv/releases/download/v{direnv_version}/direnv.linux-amd64")
-        invoke.run("chmod +x direnv")
-        invoke.run("sudo mv direnv /usr/local/bin/")
+        c.run(f"wget -O direnv https://github.com/direnv/direnv/releases/download/v{direnv_version}/direnv.linux-amd64")
+        c.run("chmod +x direnv")
+        c.run("sudo mv direnv /usr/local/bin/")
         
         # Set bashrc
         logging.info("Set bashrc")
-        invoke.run("echo 'eval \"$(direnv hook bash)\"' >> ~/.bashrc")
+        c.run("echo 'eval \"$(direnv hook bash)\"' >> ~/.bashrc")
         logging.info(f"Exec below command")
         logging.info(f"source {bashrc_path}")
         logging.info(f"direnv --help")
@@ -50,22 +50,22 @@ def install_direnv(c):
 
 @invoke.task
 def diff(c):
-    invoke.run("cdk diff", pty=True,)
+    c.run("cdk diff", pty=True,)
 
 @invoke.task
 def deploy(c):
     logging.info("deploy")
-    invoke.run("cdk deploy --require-approval never", pty=True,)
+    c.run("cdk deploy --require-approval never", pty=True,)
     logging.info("finish")
 
 @invoke.task
 def hotswap(c):
     logging.info("hotswap deploy")
-    invoke.run("cdk deploy --require-approval never --hotswap", pty=True,)
+    c.run("cdk deploy --require-approval never --hotswap", pty=True,)
     logging.info("finish")
 
 @invoke.task
 def front(c):
     logging.info("start frontend")
-    invoke.run("streamlit run frontend/app.py --logger.level=debug", pty=True,)
+    c.run("streamlit run frontend/app.py --logger.level=debug", pty=True,)
     logging.info("finish")
