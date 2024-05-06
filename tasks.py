@@ -59,6 +59,12 @@ def deploy(c):
     logging.info("finish")
 
 @invoke.task
+def destroy(c):
+    logging.info("destroy")
+    c.run("cdk destroy", pty=True,)
+    logging.info("finish")
+
+@invoke.task
 def hotswap(c):
     logging.info("hotswap deploy")
     c.run("cdk deploy --require-approval never --hotswap", pty=True,)
@@ -69,3 +75,7 @@ def front(c):
     logging.info("start frontend")
     c.run("streamlit run frontend/app.py --logger.level=debug", pty=True,)
     logging.info("finish")
+
+@invoke.task
+def allow(c):
+    c.run("direnv allow", pty=True,)
