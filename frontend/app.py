@@ -79,7 +79,7 @@ if st.button('DynamoDBをクエリ') and file_name_without_extension:
             answer = record.get('answer', '回答が見つかりません')
             st.markdown(f"## 問題")
             st.write(japanese_question)
-            st.markdown(f"## 解説")
+            # st.markdown(f"## 解説")
             st.write(answer)
         else:
             st.error("指定されたIDのレコードが見つかりませんでした。")
