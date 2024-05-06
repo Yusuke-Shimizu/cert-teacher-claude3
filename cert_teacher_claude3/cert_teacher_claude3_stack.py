@@ -19,14 +19,10 @@ class CertTeacherClaude3Stack(Stack):
 
         base_name = "y3-shimizu-cert-teacher"
         
-        bucket = self.create_s3_bucket(base_name)
         table = self.create_dynamodb_table(base_name)
         lambda_function = self.create_lambda_function(base_name, table)
-        self.configure_s3_notifications(bucket, lambda_function)
+        bucket = self.create_s3_bucket(base_name, lambda_function)
         self.add_outputs(bucket, table)
-
-    def create_s3_bucket(self, base_name: str) -> s3.Bucket:
-        return s3.Bucket(self, base_name)
 
     def create_dynamodb_table(self, base_name: str) -> dynamodb.Table:
         return dynamodb.Table(
@@ -68,10 +64,12 @@ class CertTeacherClaude3Stack(Stack):
         lambda_function.add_environment(key="DYNAMODB_TABLE_NAME", value=table.table_name)
         return lambda_function
 
-    def configure_s3_notifications(self, bucket: s3.Bucket, lambda_function: lambda_python.PythonFunction):
+    def create_s3_bucket(self, base_name: str, lambda_function: lambda_python.PythonFunction) -> s3.Bucket:
+        bucket = s3.Bucket(self, base_name)
         notification = s3n.LambdaDestination(lambda_function)
         bucket.add_event_notification(s3.EventType.OBJECT_CREATED_PUT, notification)
         bucket.grant_read(lambda_function)
+        return bucket
 
     def add_outputs(self, bucket: s3.Bucket, table: dynamodb.Table):
         CfnOutput(self, "BucketNameOutput",
