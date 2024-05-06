@@ -9,6 +9,14 @@ logging.basicConfig(level=logging.INFO, format=fmt)
 
 
 @invoke.task
+def create_venv(c):
+    """Create a virtual environment."""
+    c.run("python3 -m venv .venv")
+    print("Virtual environment created at .venv/")
+    print("source .venv/bin/activate.fish")
+
+
+@invoke.task
 def install(c):
     invoke.run("pip install -r requirements.txt -r requirements-dev.txt")
 
