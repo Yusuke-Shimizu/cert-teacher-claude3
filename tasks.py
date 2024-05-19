@@ -106,3 +106,24 @@ def allow(c):
         "direnv allow",
         pty=True,
     )
+
+
+@invoke.task
+def view_dynamodb_data(c, item_id):
+    logging.info("view_dynamodb_data")
+    table_name = os.getenv("DYNAMODB_TABLE_NAME")
+    dynamodb = boto3.resource("dynamodb")
+    table = dynamodb.Table(table_name)
+    try:
+        # item_id = "dea01"
+        response = table.get_item(Key={"id": item_id})
+        item = response.get("Item", None)
+        if item:
+            logging.info("Item found:")
+            logging.info(json.dumps(item, indent=4, ensure_ascii=False))
+        else:
+            logging.error("指定されたIDのレコードが見つかりませんでした。")
+    except Exception as e:
+        logging.error(f"DynamoDBからのクエリ中にエラーが発生しました: {e}")
+
+    logging.info("finish view_dynamodb_data")
