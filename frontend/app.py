@@ -25,6 +25,7 @@ if not bucket_name or not table_name:
 # DynamoDBテーブル名の確認
 # AWSリージョンを指定
 dynamodb = boto3.resource("dynamodb", region_name="us-west-2")
+table = ""
 try:
     # テーブルが存在するか確認
     table = dynamodb.Table(table_name)
@@ -70,13 +71,24 @@ def query_dynamodb(file_name_without_extension):
         return None
 
 
+# 初期化処理
+if "upload_button_clicked" not in st.session_state:
+    st.session_state.upload_button_clicked = False
+if "question_button_clicked" not in st.session_state:
+    st.session_state.question_button_clicked = False
+if "answer_button_clicked" not in st.session_state:
+    st.session_state.answer_button_clicked = False
+
 # ファイルアップロードウィジェットの作成
 uploaded_file = st.file_uploader(
-    "ファイルを選択してください", type=["txt", "pdf", "png", "jpg", "jpeg", "gif"]
+    "ファイルを選択してください", type=["png", "jpg", "jpeg", "gif"]
 )
 
 # アップロードボタン
 if st.button("アップロード") and uploaded_file:
+    st.session_state.upload_button_clicked = True
+
+if st.session_state.upload_button_clicked:
     file_name = uploaded_file.name
     if upload_to_s3(uploaded_file, bucket_name, file_name):
         st.success("ファイルが正常にアップロードされました。")
@@ -84,29 +96,40 @@ if st.button("アップロード") and uploaded_file:
             file_name  # セッション状態にファイル名を保存
         )
 
-# アップロードしたファイル名（拡張子を除く）をグローバル変数に保持
-file_name_without_extension = (
-    os.path.splitext(uploaded_file.name)[0] if uploaded_file else None
-)
+        # アップロードしたファイル名（拡張子を除く）をセッション状態に保存
+        st.session_state["file_name_without_extension"] = (
+            os.path.splitext(uploaded_file.name)[0] if uploaded_file else None
+        )
+
+print("uploaded_file_name")
+print(st.session_state.get("uploaded_file_name", ""))
+print("file_name_without_extension")
+print(st.session_state.get("file_name_without_extension", ""))
 
 # DynamoDBをクエリするボタンとその処理
-if st.button("問題を見る") and file_name_without_extension:
-    record = query_dynamodb(file_name_without_extension)
+# if st.button("問題を見る") and st.session_state.get("uploaded_file_name"):
+if st.button("問題を見る"):
+    st.session_state.question_button_clicked = True
+
+if st.session_state.question_button_clicked:
+    record = query_dynamodb(st.session_state.get("file_name_without_extension", ""))
+    print("record")
+    print(record)
     if record:
         st.session_state["japanese_question"] = record.get(
             "japanese_question", "日本語の問題が見つかりません"
         )
-        st.session_state["answer"] = record.get("answer", "回答が見つかりません")
-        st.markdown(f"## 問題")
         st.write(st.session_state["japanese_question"])
     else:
         st.error("指定されたIDのレコードが見つかりませんでした。")
 
 # 回答を見るボタン
 if st.button("回答を見る"):
+    st.session_state.answer_button_clicked = True
+
+if st.session_state.answer_button_clicked:
+    st.session_state["answer"] = record.get("answer", "回答が見つかりません")
     if "answer" in st.session_state and "japanese_question" in st.session_state:
-        st.markdown(f"## 問題")
-        st.write(st.session_state["japanese_question"])
         st.write(st.session_state["answer"])
     else:
         st.error("問題を先に表示してください。")
